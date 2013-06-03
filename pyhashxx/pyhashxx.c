@@ -160,7 +160,52 @@ static PyTypeObject pyhashxx_HashxxType = {
     Hashxx_new,                 /* tp_new */
 };
 
+
+
+static PyObject *
+pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
+{
+    unsigned int seed = 0;
+
+    if (kwds != NULL) {
+        Py_ssize_t kwds_size = PyDict_Size(kwds);
+        PyObject* seed_obj = PyDict_GetItemString(kwds, "seed");
+
+        if (kwds_size > 1)
+            goto badarg;
+
+        if (kwds_size == 1) {
+            if (seed_obj == NULL)
+                goto badarg;
+            if (PyInt_Check(seed_obj))
+                seed = PyInt_AsLong(seed_obj);
+            else if (PyLong_Check(seed_obj))
+                seed = PyLong_AsLong(seed_obj);
+            else
+                goto badarg;
+        }
+    }
+
+    void* state = XXH32_init(seed);
+    if (_update_hash(state, args) == NULL) {
+        XXH32_destroy(state);
+        return NULL;
+    }
+
+    unsigned int digest = XXH32_digest(state);
+    XXH32_destroy(state);
+
+    return Py_BuildValue("I", digest);
+
+badarg:
+    PyErr_BadArgument();
+    return NULL;
+}
+
 static PyMethodDef pyhashxx_methods[] = {
+    {"hashxx", (PyCFunction)pyhashxx_hashxx, METH_VARARGS | METH_KEYWORDS,
+     "Compute the xxHash value for the given value, optionally providing a seed."
+    },
     {NULL}  /* Sentinel */
 };
 
