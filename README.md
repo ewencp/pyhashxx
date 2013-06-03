@@ -9,3 +9,5 @@ and wasn't packaged nicely for installation with Python package
 managers. This version fixes both those issues. The naming
 rearrangement is to avoid conflicts with the existing wrapper in
 python.
+
+See http://code.google.com/p/xxhash/ for the original xxHash code.
