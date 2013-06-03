@@ -88,6 +88,11 @@ Hashxx_update(HashxxObject* self, PyObject *args)
     Py_ssize_t arg_i;
     PyObject* arg_obj, *partial_result;
 
+    if (arg_length == 0) {
+        PyErr_BadArgument();
+        return NULL;
+    }
+
     for(arg_i = 0; arg_i < arg_length; arg_i++) {
         arg_obj = PyTuple_GetItem(args, arg_i);
         partial_result = _update_hash(self->xxhash_state, arg_obj);
@@ -185,6 +190,8 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
                 goto badarg;
         }
     }
+    if (PyTuple_GET_SIZE(args) == 0)
+        goto badarg;
 
     void* state = XXH32_init(seed);
     if (_update_hash(state, args) == NULL) {

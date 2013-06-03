@@ -77,3 +77,18 @@ class TestHashBytes(unittest.TestCase):
 
         self.assertEquals(h1.digest(), self.hash_value('hello'))
         self.assertEquals(h2.digest(), self.hash_value('goodbye'))
+
+
+    def test_bad_seed(self):
+        with self.assertRaises(TypeError):
+            h = Hashxx(seed="badseed")
+
+    def test_bad_arg(self):
+        h = Hashxx()
+        with self.assertRaises(TypeError):
+            h.update([1,2,3])
+
+    def test_no_args(self):
+        h = Hashxx()
+        with self.assertRaises(TypeError):
+            h.update()

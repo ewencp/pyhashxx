@@ -28,3 +28,7 @@ class TestOneShot(unittest.TestCase):
     def test_bad_seed(self):
         with self.assertRaises(TypeError):
             hashxx(seed="badseed")
+
+    def test_no_args(self):
+        with self.assertRaises(TypeError):
+            hashxx()
