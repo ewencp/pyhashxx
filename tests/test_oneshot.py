@@ -9,17 +9,17 @@ class TestOneShot(unittest.TestCase):
         return h.digest()
 
     def test_empty_string(self):
-        self.assertEqual(hashxx(''), self.hash_value(''))
+        self.assertEqual(hashxx(b''), self.hash_value(b''))
 
     def test_string(self):
-        self.assertEqual(hashxx('hello'), self.hash_value('hello'))
+        self.assertEqual(hashxx(b'hello'), self.hash_value(b'hello'))
 
     def test_seeds(self):
-        self.assertNotEqual(hashxx('hello', seed=0), hashxx('hello', seed=1))
+        self.assertNotEqual(hashxx(b'hello', seed=0), hashxx(b'hello', seed=1))
 
-        self.assertEqual(hashxx('hello', seed=0), self.hash_value('hello', seed=0))
-        self.assertEqual(hashxx('hello', seed=1), self.hash_value('hello', seed=1))
-        self.assertEqual(hashxx('hello', seed=2), self.hash_value('hello', seed=2))
+        self.assertEqual(hashxx(b'hello', seed=0), self.hash_value(b'hello', seed=0))
+        self.assertEqual(hashxx(b'hello', seed=1), self.hash_value(b'hello', seed=1))
+        self.assertEqual(hashxx(b'hello', seed=2), self.hash_value(b'hello', seed=2))
 
     def test_bad_arg(self):
         self.assertRaises(TypeError, hashxx, [1, 2, 3])
@@ -29,3 +29,6 @@ class TestOneShot(unittest.TestCase):
 
     def test_no_args(self):
         self.assertRaises(TypeError, hashxx)
+
+    def test_no_unicode(self):
+        self.assertRaises(TypeError, hashxx, u'hello')

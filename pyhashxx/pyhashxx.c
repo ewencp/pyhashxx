@@ -5,6 +5,7 @@
  */
 
 #include <Python.h>
+#include "pycompat.h"
 #include "xxhash.h"
 
 typedef struct {
@@ -16,7 +17,7 @@ static void
 Hashxx_dealloc(HashxxObject* self)
 {
     XXH32_destroy(self->xxhash_state);
-    self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject *
@@ -55,12 +56,15 @@ static PyObject* _update_hash(void* hash_state, PyObject* arg_obj) {
 
     if (arg_obj == Py_None) Py_RETURN_NONE;
 
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(arg_obj)) {
+        XXH32_update(hash_state, PyBytes_AsString(arg_obj), PyBytes_Size(arg_obj));
+    }
+#else
     if (PyString_Check(arg_obj)) {
         XXH32_update(hash_state, PyString_AsString(arg_obj), PyString_Size(arg_obj));
     }
-    else if (PyUnicode_Check(arg_obj)) {
-        XXH32_update(hash_state, PyUnicode_AS_DATA(arg_obj), PyUnicode_GET_DATA_SIZE(arg_obj));
-    }
+#endif
     else if (PyByteArray_Check(arg_obj)) {
         XXH32_update(hash_state, PyByteArray_AsString(arg_obj), PyByteArray_Size(arg_obj));
     }
@@ -72,6 +76,10 @@ static PyObject* _update_hash(void* hash_state, PyObject* arg_obj) {
             // Check exceptions
             if (partial_result == NULL) return NULL;
         }
+    }
+    else if (PyUnicode_Check(arg_obj)) {
+        PyErr_BadArgument();
+        return NULL;
     }
     else {
         PyErr_BadArgument();
@@ -124,8 +132,7 @@ static PyMethodDef Hashxx_methods[] = {
 
 
 static PyTypeObject pyhashxx_HashxxType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "pyhashxx.Hashxx",         /*tp_name*/
     sizeof(HashxxObject), /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -182,9 +189,12 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
         if (kwds_size == 1) {
             if (seed_obj == NULL)
                 goto badarg;
+#if PY_MAJOR_VERSION < 3
             if (PyInt_Check(seed_obj))
                 seed = PyInt_AsLong(seed_obj);
-            else if (PyLong_Check(seed_obj))
+            else
+#endif
+                if (PyLong_Check(seed_obj))
                 seed = PyLong_AsLong(seed_obj);
             else
                 goto badarg;
@@ -216,22 +226,22 @@ static PyMethodDef pyhashxx_methods[] = {
     {NULL}  /* Sentinel */
 };
 
-#ifndef PyMODINIT_FUNC/* declarations for DLL import/export */
-#define PyMODINIT_FUNC void
-#endif
-PyMODINIT_FUNC
-initpyhashxx(void)
-{
+
+
+MOD_INIT(pyhashxx) {
     PyObject* m;
 
     if (PyType_Ready(&pyhashxx_HashxxType) < 0)
-        return;
+        RETURN_MOD_INIT_ERROR;
 
-    m = Py_InitModule3("pyhashxx", pyhashxx_methods,
-        "Python wrapper of the xxHash fast hash algorithm.");
+    MOD_DEF(m, "pyhashxx",
+        "Python wrapper of the xxHash fast hash algorithm.",
+        pyhashxx_methods);
     if (m == NULL)
-        return;
+        RETURN_MOD_INIT_ERROR;
 
     Py_INCREF(&pyhashxx_HashxxType);
     PyModule_AddObject(m, "Hashxx", (PyObject *)&pyhashxx_HashxxType);
+
+    RETURN_MOD_INIT_SUCCESS(m);
 }
