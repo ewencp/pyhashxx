@@ -43,3 +43,37 @@ class TestHashBytes(unittest.TestCase):
         h = Hashxx(seed=2)
         h.update('hello')
         self.assertEquals(h.digest(), 4191738725)
+
+    def hash_value(self, val, seed=0):
+        h = Hashxx(seed=seed)
+        h.update(val)
+        return h.digest()
+
+    def test_incremental(self):
+        # Make sure incrementally computed results match those
+        # computed all at once
+        hello_hash = self.hash_value('hello')
+        hello_world_hash = self.hash_value('helloworld')
+
+        h = Hashxx()
+        h.update('hello')
+        self.assertEquals(h.digest(), hello_hash)
+        h.update('world')
+        self.assertEquals(h.digest(), hello_world_hash)
+
+
+    def test_simultaneous(self):
+        # Ensure that interleaved updates still give same results as
+        # independent
+        h1 = Hashxx()
+        h2 = Hashxx()
+
+        h1.update('he')
+        h2.update('goo')
+        h1.update('ll')
+        h2.update('db')
+        h1.update('o')
+        h2.update('ye')
+
+        self.assertEquals(h1.digest(), self.hash_value('hello'))
+        self.assertEquals(h2.digest(), self.hash_value('goodbye'))
