@@ -22,13 +22,10 @@ class TestOneShot(unittest.TestCase):
         self.assertEqual(hashxx('hello', seed=2), self.hash_value('hello', seed=2))
 
     def test_bad_arg(self):
-        with self.assertRaises(TypeError):
-            hashxx([1, 2, 3])
+        self.assertRaises(TypeError, hashxx, [1, 2, 3])
 
     def test_bad_seed(self):
-        with self.assertRaises(TypeError):
-            hashxx(seed="badseed")
+        self.assertRaises(TypeError, hashxx, seed="badseed")
 
     def test_no_args(self):
-        with self.assertRaises(TypeError):
-            hashxx()
+        self.assertRaises(TypeError, hashxx)

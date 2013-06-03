@@ -80,15 +80,12 @@ class TestHashBytes(unittest.TestCase):
 
 
     def test_bad_seed(self):
-        with self.assertRaises(TypeError):
-            h = Hashxx(seed="badseed")
+        self.assertRaises(TypeError, Hashxx, seed="badseed")
 
     def test_bad_arg(self):
         h = Hashxx()
-        with self.assertRaises(TypeError):
-            h.update([1,2,3])
+        self.assertRaises(TypeError, h.update, [1,2,3])
 
     def test_no_args(self):
         h = Hashxx()
-        with self.assertRaises(TypeError):
-            h.update()
+        self.assertRaises(TypeError, h.update)
