@@ -11,3 +11,8 @@ rearrangement is to avoid conflicts with the existing wrapper in
 python.
 
 See http://code.google.com/p/xxhash/ for the original xxHash code.
+
+
+Buildbot
+--------
+[![Build Status](https://secure.travis-ci.org/ewencp/pyhashxx.png)](http://travis-ci.org/ewencp/pyhashxx)
