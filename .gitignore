@@ -1,1 +1,5 @@
 *.pyc
+
+build/
+pyhashxx.egg-info
+pyhashxx.so
