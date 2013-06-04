@@ -54,8 +54,6 @@ static PyObject* _update_hash(void* hash_state, PyObject* arg_obj) {
     Py_ssize_t tuple_i;
     PyObject* tuple_obj, *partial_result;
 
-    if (arg_obj == Py_None) Py_RETURN_NONE;
-
 #if PY_MAJOR_VERSION >= 3
     if (PyBytes_Check(arg_obj)) {
         XXH32_update(hash_state, PyBytes_AsString(arg_obj), PyBytes_Size(arg_obj));
@@ -76,6 +74,9 @@ static PyObject* _update_hash(void* hash_state, PyObject* arg_obj) {
             // Check exceptions
             if (partial_result == NULL) return NULL;
         }
+    }
+    else if (arg_obj == Py_None) {
+        Py_RETURN_NONE;
     }
     else if (PyUnicode_Check(arg_obj)) {
         PyErr_SetString(PyExc_TypeError, "Found unicode string, you must convert to bytes/str before hashing.");
@@ -209,18 +210,50 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
             }
         }
     }
-    if (PyTuple_GET_SIZE(args) == 0) {
+    Py_ssize_t args_len = PyTuple_GET_SIZE(args);
+    if (args_len == 0) {
         err_msg = "Received no arguments to be hashed.";
         goto badarg;
     }
 
+    unsigned int digest = 0;
+    // If possible, use the shorter, faster version that elides
+    // allocating the state variable because it knows there is only
+    // one input.
+    if (args_len == 1) {
+        PyObject* hash_obj = PyTuple_GetItem(args, 0);
+        int did_hash = 1;
+#if PY_MAJOR_VERSION >= 3
+        if (PyBytes_Check(hash_obj)) {
+            digest = XXH32(PyBytes_AsString(hash_obj), PyBytes_Size(hash_obj), seed);
+        }
+#else
+        if (PyString_Check(hash_obj)) {
+            digest = XXH32(PyString_AsString(hash_obj), PyString_Size(hash_obj), seed);
+        }
+#endif
+        else if (PyByteArray_Check(hash_obj)) {
+            digest = XXH32(PyByteArray_AsString(hash_obj), PyByteArray_Size(hash_obj), seed);
+        }
+        else if (hash_obj == Py_None) {
+            // Nothing to hash
+            digest = XXH32("", 0, seed);
+        }
+        else {
+            did_hash = 0;
+        }
+
+        if (did_hash)
+            return Py_BuildValue("I", digest);
+    }
+
+    // Otherwise, do it the long, slower way
     void* state = XXH32_init(seed);
     if (_update_hash(state, args) == NULL) {
         XXH32_destroy(state);
         return NULL;
     }
-
-    unsigned int digest = XXH32_digest(state);
+    digest = XXH32_digest(state);
     XXH32_destroy(state);
 
     return Py_BuildValue("I", digest);
