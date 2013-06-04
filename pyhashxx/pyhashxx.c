@@ -78,11 +78,11 @@ static PyObject* _update_hash(void* hash_state, PyObject* arg_obj) {
         }
     }
     else if (PyUnicode_Check(arg_obj)) {
-        PyErr_BadArgument();
+        PyErr_SetString(PyExc_TypeError, "Found unicode string, you must convert to bytes/str before hashing.");
         return NULL;
     }
     else {
-        PyErr_BadArgument();
+        PyErr_Format(PyExc_TypeError, "Tried to hash unsupported type: %S.", Py_TYPE(arg_obj));
         return NULL;
     }
 
@@ -97,7 +97,7 @@ Hashxx_update(HashxxObject* self, PyObject *args)
     PyObject* arg_obj, *partial_result;
 
     if (arg_length == 0) {
-        PyErr_BadArgument();
+        PyErr_SetString(PyExc_TypeError, "Must provide arguments to hash to Hashxx.update.");
         return NULL;
     }
 
@@ -178,17 +178,23 @@ static PyObject *
 pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
 {
     unsigned int seed = 0;
+    const char* err_msg = NULL;
+    PyObject* err_obj = NULL;
 
     if (kwds != NULL) {
         Py_ssize_t kwds_size = PyDict_Size(kwds);
         PyObject* seed_obj = PyDict_GetItemString(kwds, "seed");
 
-        if (kwds_size > 1)
+        if (kwds_size > 1) {
+            err_msg = "Unexpected keyword arguments, only 'seed' is supported.";
             goto badarg;
+        }
 
         if (kwds_size == 1) {
-            if (seed_obj == NULL)
+            if (seed_obj == NULL) {
+                err_msg = "Unexpected keyword argument, only 'seed' is supported.";
                 goto badarg;
+            }
 #if PY_MAJOR_VERSION < 3
             if (PyInt_Check(seed_obj))
                 seed = PyInt_AsLong(seed_obj);
@@ -196,12 +202,17 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
 #endif
                 if (PyLong_Check(seed_obj))
                 seed = PyLong_AsLong(seed_obj);
-            else
-                goto badarg;
+            else {
+                err_msg = "Unexpected seed value type: %S";
+                err_obj = seed_obj;
+                goto badseed;
+            }
         }
     }
-    if (PyTuple_GET_SIZE(args) == 0)
+    if (PyTuple_GET_SIZE(args) == 0) {
+        err_msg = "Received no arguments to be hashed.";
         goto badarg;
+    }
 
     void* state = XXH32_init(seed);
     if (_update_hash(state, args) == NULL) {
@@ -215,7 +226,10 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
     return Py_BuildValue("I", digest);
 
 badarg:
-    PyErr_BadArgument();
+    PyErr_SetString(PyExc_TypeError, err_msg);
+    return NULL;
+badseed:
+    PyErr_Format(PyExc_TypeError, err_msg, Py_TYPE(err_obj));
     return NULL;
 }
 
