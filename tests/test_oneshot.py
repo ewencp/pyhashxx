@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from pyhashxx import hashxx, Hashxx
 import unittest
 
@@ -31,4 +32,4 @@ class TestOneShot(unittest.TestCase):
         self.assertRaises(TypeError, hashxx)
 
     def test_no_unicode(self):
-        self.assertRaises(TypeError, hashxx, u'hello')
+        self.assertRaises(TypeError, hashxx, 'hello')

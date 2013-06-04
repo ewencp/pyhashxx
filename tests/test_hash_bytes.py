@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from pyhashxx import Hashxx
 import unittest
 
@@ -92,4 +93,4 @@ class TestHashBytes(unittest.TestCase):
 
     def test_no_unicode(self):
         h = Hashxx()
-        self.assertRaises(TypeError, h.update, u'hello')
+        self.assertRaises(TypeError, h.update, 'hello')
