@@ -15,13 +15,18 @@
 
 
 #if PY_MAJOR_VERSION >= 3
-#define MOD_DEF(ob, name, doc, methods) \
-    static struct PyModuleDef moduledef = { \
-        PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
-    ob = PyModule_Create(&moduledef);
+#define MOD_DECL(ob, name, doc, methods) \
+    static struct PyModuleDef ob##_moduledef = { \
+        PyModuleDef_HEAD_INIT, name, doc, -1, methods, };
+#define MOD_DEF(ob) \
+    ob = PyModule_Create(&ob##_moduledef);
 #else
-#define MOD_DEF(ob, name, doc, methods) \
-    ob = Py_InitModule3(name, methods, doc);
+#define MOD_DECL(ob, name, doc, methods) \
+    char* ob##_name = name; \
+    char* ob##_doc = doc; \
+    PyMethodDef* ob##_methods = methods;
+#define MOD_DEF(ob) \
+    ob = Py_InitModule3(ob##_name, ob##_methods, ob##_doc);
 #endif
 
 #if PY_MAJOR_VERSION >= 3

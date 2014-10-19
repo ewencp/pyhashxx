@@ -181,6 +181,9 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
     unsigned int seed = 0;
     const char* err_msg = NULL;
     PyObject* err_obj = NULL;
+    Py_ssize_t args_len = 0;
+    unsigned int digest = 0;
+    void* state = NULL;
 
     if (kwds != NULL) {
         Py_ssize_t kwds_size = PyDict_Size(kwds);
@@ -210,13 +213,12 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
             }
         }
     }
-    Py_ssize_t args_len = PyTuple_GET_SIZE(args);
+    args_len = PyTuple_GET_SIZE(args);
     if (args_len == 0) {
         err_msg = "Received no arguments to be hashed.";
         goto badarg;
     }
 
-    unsigned int digest = 0;
     // If possible, use the shorter, faster version that elides
     // allocating the state variable because it knows there is only
     // one input.
@@ -248,7 +250,7 @@ pyhashxx_hashxx(PyObject* self, PyObject *args, PyObject *kwds)
     }
 
     // Otherwise, do it the long, slower way
-    void* state = XXH32_init(seed);
+    state = XXH32_init(seed);
     if (_update_hash(state, args) == NULL) {
         XXH32_destroy(state);
         return NULL;
@@ -277,13 +279,14 @@ static PyMethodDef pyhashxx_methods[] = {
 
 MOD_INIT(pyhashxx) {
     PyObject* m;
+    MOD_DECL(m, "pyhashxx",
+        "Python wrapper of the xxHash fast hash algorithm.",
+        pyhashxx_methods);
 
     if (PyType_Ready(&pyhashxx_HashxxType) < 0)
         RETURN_MOD_INIT_ERROR;
 
-    MOD_DEF(m, "pyhashxx",
-        "Python wrapper of the xxHash fast hash algorithm.",
-        pyhashxx_methods);
+    MOD_DEF(m);
     if (m == NULL)
         RETURN_MOD_INIT_ERROR;
 
