@@ -1,12 +1,12 @@
 from setuptools import find_packages, setup, Extension
 
-pyhashxx = Extension('pyhashxx',
-                      sources = [ 'pyhashxx/xxhash.c',
-                                  'pyhashxx/pyhashxx.c',
-                                  ],
-                     depends = [  'pyhashxx/xxhash.h',
-                                  'pyhashxx/pycompat.h',
-                                  ])
+headers = [  'pyhashxx/xxhash.h',
+             'pyhashxx/pycompat.h',
+         ]
+sources = [ 'pyhashxx/xxhash.c',
+            'pyhashxx/pyhashxx.c',
+        ]
+pyhashxx = Extension('pyhashxx', sources=sources, depends=headers)
 
 setup(
     name = "pyhashxx",
@@ -20,4 +20,5 @@ setup(
     packages = find_packages(),
     ext_modules = [ pyhashxx ],
     test_suite = "tests",
+    headers = headers,
 )
