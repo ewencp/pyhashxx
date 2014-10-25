@@ -10,7 +10,7 @@ pyhashxx = Extension('pyhashxx', sources=sources, depends=headers)
 
 setup(
     name = "pyhashxx",
-    version = "0.1.2",
+    version = "0.1.3",
     description = "Python wrapper for xxHash algorithm",
     author = "Ewen Cheslack-Postava",
     author_email = 'me@ewencp.org',
