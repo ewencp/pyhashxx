@@ -1,3 +1,6 @@
+**This repository has moved to [https://code.ewencp.org/ewencp/pyhashxx](https://code.ewencp.org/ewencp/pyhashxx)**
+
+
 pyhashxx
 ========
 
